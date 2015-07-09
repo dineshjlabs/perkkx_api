@@ -86,7 +86,7 @@ def rate_merchant (request):
 
 
         return response({"success": 1})
-    except Exception e:
+    except Exception, e:
         return response({"success": 0, "error": "Exception "+str(e)})
 
 @csrf_exempt
