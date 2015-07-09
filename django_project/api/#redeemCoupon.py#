@@ -1,0 +1,49 @@
+from bson.json_util import dumps
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.template import Template,Context
+import pymongo
+import datetime
+import random
+import string
+import json
+
+failure = dumps({ "success": 0 })
+dbclient = pymongo.MongoClient("mongodb://45.55.232.5:27017")
+db = dbclient.test
+
+@csrf_exempt
+def get_coupon(request):
+	try:
+		collection = db.deals
+		data = json.loads(request.body)
+		result = collection.find_one({"vendor_id":data['vendor_id'],"cID":data["cID"]})
+		user = db.user.find_one({"userID":data['userID']})
+                try:
+                        if data['cID'] in user['coupon'].keys():
+                                return HttpResponse(failure, content_type="application/json")
+                except:
+                        print "hi"
+		codes = result['rcodes']
+		code = codes.pop()
+		result['rcodes'] = codes
+		result['usedrcodes'].append(code)
+		collection.update({"vendor_id":data['vendor_id'],"cID":data["cID"]},{"$set":result},False)
+		try:
+			user['coupon'].update({data['cID']:code})
+		except:
+			cc = {'coupon':{data['cID']:code}}
+			user.update(cc)
+		db.user.update({"userID":data['userID']},{"$set":user},False)
+		res = { "success": 1, "code": code }
+		return HttpResponse(dumps(res),content_type="application/json")
+	except:
+                #raise
+		return HttpResponse(failure, content_type="application/json")
+@csrf_exempt
+def redeemCoupon(request):
+        try:
+                
+        except:
+                #raise
+                return HttpResponse(failure, content_type="application/json")

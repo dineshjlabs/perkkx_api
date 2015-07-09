@@ -1,0 +1,40 @@
+from bson.json_util import dumps
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.template import Template,Context
+import pymongo
+import datetime
+import random
+import string
+import json
+from dispute import check_dispute
+failure = dumps({ "success": 0 })
+dbclient = pymongo.MongoClient("mongodb://45.55.232.5:27017")
+db = dbclient.test
+@csrf_exempt
+def test(request):
+        collection = db.googleapitest
+        collection.indert({"hi":"hi"})
+        return HttpResponse("Bad Request",content_type="application/json")
+@csrf_exempt
+def get_coupon(request):
+	try:
+		collection = db.deals
+		data = json.loads(request.body)
+		result = collection.find_one({"vendor_id":data['vendor_id'],"cID":data["cID"]})
+		user = db.order_data.find_one({"userID":data['userID'],"cID":data["cID"]})
+		if user:
+			return HttpResponse(dumps({ "success": 1, "code": user['rcode'] }), content_type="application/json")
+		if db.order_data.find({"userID":data['userID'],"ustatus":"pending"}).count() >=2:
+			return HttpResponse(dumps({ "success": 0, "reason": "redeem limit reached" }), content_type="application/json")
+		else:
+			codes = result['rcodes']
+			code = codes.pop()
+			result['rcodes'] = codes
+			result['usedrcodes'].append(code)
+			collection.update({"vendor_id":data['vendor_id'],"cID":data["cID"]},{"$set":result},False)
+			couponRecord = {"vendor_id":data['vendor_id'],"cID":data["cID"],"userID":data['userID'],"rcode":code,"used_on":datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"),"ustatus":"pending","mstatus":"pending"}
+			db.order_data.insert(couponRecord)
+			return HttpResponse(dumps({ "success": 1, "code": code }), content_type="application/json")
+	except:
+		return HttpResponse(failure, content_type="application/json")

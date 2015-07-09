@@ -1,0 +1,86 @@
+from bson.json_util import dumps
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.template import Template,Context
+import pymongo
+import datetime
+import random
+import string
+import json
+failure = dumps({ "success": 0 })
+dbclient = pymongo.MongoClient("mongodb://45.55.232.5:27017")
+db = dbclient.test
+
+@csrf_exempt
+def get_deals(request, category, typ):
+    global db
+    try:
+        #db = dbclient.perkkx
+        mCollection = db.merchants
+        dCollection = db.deals
+        mer = mCollection.find({"cat": int(category)})
+        data = []
+        try:
+            pages = int(request.GET['pages'])
+        except:
+            pages = 1
+        for m in mer:
+            deals = dCollection.find({"vendor_id": m["vendor_id"], "type": typ})
+            if deals.count() == 0:
+                continue
+
+            for deal in deals:
+                if len(deal['rcodes']) == 0:               # filter
+                    continue
+                merdata = {}
+                merdata.update(m)
+                deal.pop("rcodes")
+                deal.pop("usedrcodes")
+                merdata.update(deal)
+                data.append(merdata)
+        start = (pages-1)*10
+        end = start + 9
+        if end > len(data):
+            end = len(data)
+        if start > len(data):
+            start = len(data) - 10
+
+        res = {
+            "total": len(data),
+            "data": data[start:end],
+            "page": pages
+        }
+        return HttpResponse(dumps(res), content_type="application/json")
+    except:
+        raise
+        return HttpResponse(dumps({"exception": "error", "type": typ}), content_type="application/json")
+
+@csrf_exempt
+def get_totals(request):
+    global db
+    #db = dbclient.perkkx
+    res = {
+        "single": [],
+        "group": []
+    }
+    for i in range(1,5):        # each category
+        mers = db.merchants.find({"cat": i}, {"vendor_id": True})
+        s = 0
+        g = 0
+        for mer in mers:
+            """
+            deals = db.deals.find({"vendor_id": mer['vendor_id'], "type": 'single'})
+            for deal in deals:
+                if len(deal['rcodes']) > 0:
+                    s += 1
+
+            deals = db.deals.find({"vendor_id": mer['vendor_id'], "type": 'group'})
+            for deal in deals:
+                if len(deal['rcodes']) > 0:
+                    g += 1
+            """
+            s += db.deals.find({"vendor_id": mer['vendor_id'], "type": 'single', "rcodes" : {"$not": {"$size": 0}}}).count()
+            g += db.deals.find({"vendor_id": mer['vendor_id'], "type": 'group', "rcodes" : {"$not": {"$size": 0}}}).count()
+        res["single"].append(s)
+        res["group"].append(g)
+    return HttpResponse(dumps(res), content_type="application/json")
