@@ -18,7 +18,7 @@ db = dbclient.test
 def distance(obj):
     R = 6371
     dLat = (obj['l2'] - obj['l1']) * pi / 180
-    dLon = (obj['ln2'] - obj['ln1']) * pi / 180;
+    dLon = (obj['ln2'] - obj['ln1']) * pi / 180
     lat1 = obj['l1'] * pi / 180
     lat2 = obj['l2'] * pi / 180
  
@@ -68,21 +68,21 @@ def get_deals(request,user, category, typ):
         if 'cuisine' in request.GET.keys():
             search.update({"cuisine":{"$in":request.GET['cuisine'].split(",")}})
         if 'mtype' in request.GET.keys():
-        	search.update({"massage.type":int(request.GET['mtype'])})
+            search.update({"massage.type":int(request.GET['mtype'])})
         if 'tag' in request.GET.keys():
             search.update({"icons":{"$in":request.GET['tag'].split(",")}})
         if 'vendor' in request.GET.keys():
             search.update({"vendor_id":{"$in":[int(x.replace("u","").strip("'")) for x in request.GET['vendor'].split(",")]}})
         if 'area' in request.GET.keys():
-        	search.update({"address.text":{"$in":[re.compile(x.replace("_"," "),re.IGNORECASE) for x in request.GET['area'].split(",")]}})
+            search.update({"address.text":{"$in":[re.compile(x.replace("_"," "),re.IGNORECASE) for x in request.GET['area'].split(",")]}})
         if 'rate' in request.GET.keys():
-        	rating = [float(int(x) - 0.1) for x in request.GET['rate'].split(",")]
-        	search.update({"rating":{"$gt":min(rating)}})
+            rating = [float(int(x) - 0.1) for x in request.GET['rate'].split(",")]
+            search.update({"rating":{"$gt":min(rating)}})
         if 'price' in request.GET.keys():
-        	low,high = request.GET['price'].split("-")
-        	low = int(low) - 1
-        	high = int(high) - 1
-        	search.update({"price":{"$gt":low,"$lt":high}})
+            low,high = request.GET['price'].split("-")
+            low = int(low) - 1
+            high = int(high) - 1
+            search.update({"price":{"$gt":low,"$lt":high}})
         mer = mCollection.find(search)
         for m in mer:
             deals = dCollection.find({"vendor_id": m["vendor_id"], "type": typ})
@@ -100,9 +100,9 @@ def get_deals(request,user, category, typ):
                 deal.pop("usedrcodes")
                 merdata.pop("cat")
                 if datetime.datetime.strptime(merdata['close_time'],"%H:%M") > datetime.datetime.strptime(datetime.datetime.now().time().strftime("%H:%M"),"%H:%M"):
-                	op = True
+                    op = True
                 else:
-                	op = False
+                    op = False
                 merdata.pop("open_time")
                 merdata.pop("close_time")
                 merdata.update({"open":op})
@@ -137,9 +137,8 @@ def get_deals(request,user, category, typ):
             "page": pages
         }
         return HttpResponse(dumps(res), content_type="application/json")
-    except:
-        raise
-        return HttpResponse(dumps({"exception": "error", "type": typ}), content_type="application/json")
+    except Exception, e:
+        return HttpResponse(dumps({"exception": "error : "+str(e), "type": typ}), content_type="application/json")
 
 @csrf_exempt
 def get_totals(request):
