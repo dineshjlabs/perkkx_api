@@ -17,6 +17,32 @@ def _copy_bill(dest, source):
     dest['paid'] = source['paid']
     dest['discount'] = source['discount']
 
+def update_order_data (query, req_data):
+    collection = db.order_data
+    record = collection.find_one(query)
+
+    # Section 1: Merchant Initiated
+    if record['ustatus'] == "pending":
+        record['mstatus'] = req_data['status']
+        if req_data['status'] == 'used':
+            _copy_bill(record, req_data)
+            # Rest of the merchant initiated process to be done when user closes the coupon
+
+    elif record['ustatus'] == 'used' and req_data['status'] == 'used':              # Section 2: User Initiated, was disputed, will resolve dispute
+        record['mstatus'] = 'used'
+        _copy_bill(record, req_data)
+    elif record['ustatus'] == 'expired' and req_data['status'] == 'expired':    ## NOT possible
+        record['mstatus'] = 'expired'
+    elif record['ustatus'] == 'expired' and req_data['status'] == 'used':       # Resolve dispute ## NOT possible
+        record['ustatus'] = 'used'
+        record['mstatus'] = 'used'
+        _copy_bill(record, req_data)
+    else:                                                                       # DISPUTE
+        record['mstatus'] = 'disputed'                                          # NOT possible
+
+    result = collection.update(query, record, False)
+    return result['updatedExisting']
+
 " Post data from the merchnat app "
 @csrf_exempt
 def post(request, vendor_id):
@@ -25,39 +51,14 @@ def post(request, vendor_id):
         collection = db.order_data
         
         if 'orig_cID' in req_data:
-            search = {
+            query = {
                 "vendor_id": int(vendor_id),
                 "cID": req_data["orig_cID"],
                 "userID": req_data["rcode"][:-2],
                 "rcode": req_data["rcode"]
             }
-            record = collection.find_one(search)
-            #record['rcode'] = req_data['rcode']
-            
-            # Section 1: Merchant Initiated
-            if record['ustatus'] == "pending":
-                # TODO
-                # We need to send out a notification to user here, to let him rate 
-                # the merchant or to select did-not avail service
-                
-                record['mstatus'] = req_data['status']
-                if req_data['status'] == 'used':
-                    _copy_bill(record, req_data)
-                # Rest of the merchant initiated process to be done when user closes the coupon
-
-            elif record['ustatus'] == 'used' and req_data['status'] == 'used':              # Section 2: User Initiated, was disputed, will resolve dispute
-                record['mstatus'] = 'used'
-                _copy_bill(record, req_data)
-            elif record['ustatus'] == 'expired' and req_data['status'] == 'expired':    ## NOT possible
-                record['mstatus'] = 'expired'
-            elif record['ustatus'] == 'expired' and req_data['status'] == 'used':       # Resolve dispute ## NOT possible
-                record['ustatus'] = 'used'
-                record['mstatus'] = 'used'
-                _copy_bill(record, req_data)
-            else:                                                                       # DISPUTE
-                record['mstatus'] = 'disputed'                                          # NOT possible
-
-            collection.update(search, record)
+            while not update_order_data(query, req_data):
+                pass
             return HttpResponse(dumps({ "success": 1, "debug": "case1" }), content_type='application/json')
             
         else:

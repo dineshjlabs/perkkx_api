@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.template import Template,Context
 import pymongo
-import datetime
+from datetime import datetime
 import random
 import string
 import json
@@ -21,13 +21,11 @@ def updateRating (vendor_id, rating):
     return result['updatedExisting']
 
 
-def check_dispute (rcode, cID):
+def check_dispute (query, ustatus):
     collection = db.order_data
-    order = collection.findd_one({"cID": cID, "userID": rcode[:-2], "rcode": rcode})
+    order = collection.find_one(query)
 
-    ustatus = order['ustatus']
     mstatus = order['mstatus']
-    res = ''
 
     if ustatus == 'used' and mstatus == 'pending':      # New rules
         res = 'disputed'
@@ -38,7 +36,7 @@ def check_dispute (rcode, cID):
     else:
         res = 'disputed'
 
-    result = collection.update(order, {"$set": {"mstatus": res}}, False)
+    result = collection.update(order, {"$set": {"mstatus": res, "ustatus": ustatus}}, False)
     return result['updatedExisting']
 
 
@@ -57,8 +55,12 @@ def rate_merchant (request):
     try:
         data = json.loads(request.body)
         uID = data['rcode'][:-2]
-        vID = data['vendor_id']
+        vID = int(data['vendor_id'])
         das = data['das']
+        # Step 0: check validity of user
+        if db.user.count({"userID": uID}) == 0:
+            return response({"success": 0, "error": "Invalid user"})
+
         # Step 1: Save rating to user db (opt)
         if not das:
             db.user.update({"userID": uID}, {"$push": {"rating": {
@@ -75,6 +77,26 @@ def rate_merchant (request):
             status = "expired"
         else:
             status = "used"
+
+        query = {
+            "vendor_id": vID,
+            "cID": data['cID'],
+            "rcode": data['rcode'],
+            "userID": uID
+        }
+
+        if db.order_data.count(query) == 0:
+            if status == "used":
+                query.update({
+                    "used_on": datetime.now(),
+                    "mstatus": "disputed",
+                    "ustatus": "used"
+                })
+                db.order_data.insert(query)
+        else:
+            while not check_dispute(query, status):
+                pass
+        """
         db.order_data.update({
             "vendor_id": vID,
             "userID": uID,
@@ -83,7 +105,7 @@ def rate_merchant (request):
         }, {"$set": {"ustatus": status}}, False)
         while not check_dispute(data['rcode'], data['cID']):
             pass
-
+        """
 
         return response({"success": 1})
     except Exception, e:
