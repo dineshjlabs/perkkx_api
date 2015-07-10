@@ -14,10 +14,10 @@ dbclient = pymongo.MongoClient("mongodb://45.55.232.5:27017")
 db = dbclient.test
 
 def updateRating (vendor_id, rating):
-    collection = db.merchant
+    collection = db.merchants
     merchant = collection.find_one({"vendor_id": vendor_id})
-    newRating = (merchant['raing'] + rating) / 2
-    result = collection.update(merchant, {"$set": {"rating": newRating}}, False)
+    newRating = (merchant['rating'] + rating) / 2
+    result = collection.update({"vendor_id": vendor_id, "rating": merchant['rating']}, {"$set": {"rating": newRating}}, False)
     return result['updatedExisting']
 
 
@@ -63,39 +63,48 @@ def rate_merchant (request):
 
         # Step 1: Save rating to user db (opt)
         if not das:
-            db.user.update({"userID": uID}, {"$push": {"rating": {
-                "value": data['rating'],
-                "vendor_id": vID,
-                "date": datetime.now()
-            }}}, False)
-            # Step 2: Modify merchant rating (opt)
-            while not updateRating (vID, data['rating']):
-                pass
+            try:
+                db.user.update({"userID": uID}, {"$push": {"rating": {
+                    "value": data['rating'],
+                    "vendor_id": vID,
+                    "date": datetime.now()
+                }}}, False)
+            except Exception, e:
+                return response({"sucess": 0, "error": "Step 1, "+str(e)})
+            try:
+                # Step 2: Modify merchant rating (opt)
+                while not updateRating(vID, data['rating']):
+                    pass
+            except Exception, e:
+                return response({"sucess": 0, "error": "Step 2, "+str(e), "vendor_id": vID})
 
         # Step 3: Update order_data and resolve conflict        //Dicey, check code
-        if das:
-            status = "expired"
-        else:
-            status = "used"
+        try:
+            if das:
+                status = "expired"
+            else:
+                status = "used"
 
-        query = {
-            "vendor_id": vID,
-            "cID": data['cID'],
-            "rcode": data['rcode'],
-            "userID": uID
-        }
+            query = {
+                "vendor_id": vID,
+                "cID": data['cID'],
+                "rcode": data['rcode'],
+                "userID": uID
+            }
 
-        if db.order_data.count(query) == 0:
-            if status == "used":
-                query.update({
-                    "used_on": datetime.now(),
-                    "mstatus": "disputed",
-                    "ustatus": "used"
-                })
-                db.order_data.insert(query)
-        else:
-            while not check_dispute(query, status):
-                pass
+            if db.order_data.count(query) == 0:
+                if status == "used":
+                    query.update({
+                        "used_on": datetime.now(),
+                        "mstatus": "disputed",
+                        "ustatus": "used"
+                    })
+                    db.order_data.insert(query)
+            else:
+                while not check_dispute(query, status):
+                    pass
+        except Exception, e:
+            return response({"sucess": 0, "error": "Step 3, "+str(e)})
         """
         db.order_data.update({
             "vendor_id": vID,
