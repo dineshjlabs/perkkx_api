@@ -1,0 +1,7 @@
+Django==1.6.1
+Unidecode==0.04.18
+argparse==1.2.1
+gunicorn==19.3.0
+mailer==0.8.1
+pymongo==3.0.3
+wsgiref==0.1.2
