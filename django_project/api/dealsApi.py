@@ -116,6 +116,12 @@ def get_deals(request,user, category, typ):
                 	op = False
 #                merdata.pop("open_time")
 #               merdata.pop("close_time")
+                price = merdata.pop("price")
+                try:
+                    price = int(float(re.sub("[\d+\.]","",price).strip(".")))
+                except:
+                    continue
+                merdata['price'] = price
                 merdata.update({"open":op})
                 merdata.update({"cat":int(category)})
                 if merdata['address']['lat'] and merdata['address']['lng']:
