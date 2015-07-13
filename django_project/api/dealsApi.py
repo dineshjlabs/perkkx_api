@@ -118,7 +118,7 @@ def get_deals(request,user, category, typ):
 #               merdata.pop("close_time")
                 price = merdata.pop("price")
                 try:
-                    price = int(float(re.sub("[\d+\.]","",price).strip(".")))
+                    price = int(float(re.sub("[^\d+\.]","",price).strip(".")))
                 except:
                     raise
                     pass
