@@ -60,10 +60,10 @@ def get_deals(request,user, category, typ):
             if 'rating' in request.GET['sort']:
                 sort = 'rating'
                 reverse = True
-            elif 'r' in request.GET['sort']:
-                sort = 'distance'
             elif 'price' in request.GET['sort']:
                 sort = 'price'
+            elif 'r' in request.GET['sort']:
+                sort = 'distance'
             else:
                 return HttpResponse(dumps(request.GET), content_type="application/json")
                 sort = 'distance'
