@@ -112,7 +112,7 @@ def getdata(request):
     global db
     failure = dict()
     try:
-        id = json.loads(request.body)['id']
+        id = request.GET['userID']
         #db = dbclient.perkkx
         collection = db.user
         data = collection.find({"userID":id})
