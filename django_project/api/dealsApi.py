@@ -120,7 +120,7 @@ def get_deals(request,user, category, typ):
                 try:
                     price = int(float(re.sub("[\d+\.]","",price).strip(".")))
                 except:
-                    continue
+                    pass
                 merdata['price'] = price
                 merdata.update({"open":op})
                 merdata.update({"cat":int(category)})
