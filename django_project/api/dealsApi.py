@@ -148,7 +148,7 @@ def get_deals(request,user, category, typ):
             delta = [x for x in newlist if x['open'] is True]
         else:
             delta = newlist
-        newlist = sorted(delta, key=lambda k: k[sort],reverse=reverse) 
+        newlist = sorted(delta, key=lambda k: k[sort] if k[sort] else 100,reverse=reverse)
         res = {
             "total": len(newlist),
             "data": newlist[start:end],
