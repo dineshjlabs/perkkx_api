@@ -70,6 +70,7 @@ def get_deals(request,user, category, typ):
         else:
             return HttpResponse(dumps(request.GET), content_type="application/json")
             sort = 'distance'
+        sdfsdfsdf
         search = {"cat": int(category)}
         if 'subcat' in request.GET.keys():
             search.update({"subcat":{"$in":[int(x.replace("u","").strip("'")) for x in request.GET['subcat'].split(",")]}})
