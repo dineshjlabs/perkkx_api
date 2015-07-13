@@ -10,6 +10,7 @@ import json
 import math
 import re
 from unidecode import unidecode
+from dateutil.tz import *
 from math import pi, sin , cos , atan2,sqrt
 
 failure = dumps({ "success": 0 })
@@ -49,6 +50,10 @@ def get_deals(request,user, category, typ):
             r = int(request.GET['r'])
         else:
             r = False
+        if 'open' in request.GET.keys():
+            ope = True
+        else:
+            ope = False
         reverse = False
         if 'sort' in request.GET.keys():
             if 'rating' in request.GET['sort']:
@@ -65,6 +70,8 @@ def get_deals(request,user, category, typ):
         search = {"cat": int(category)}
         if 'subcat' in request.GET.keys():
             search.update({"subcat":{"$in":[int(x.replace("u","").strip("'")) for x in request.GET['subcat'].split(",")]}})
+        if 'ser' in request.GET.keys():
+            search.update({"special_event.title":{"$in":request.GET['ser'].split(",")}})
         if 'cuisine' in request.GET.keys():
             search.update({"cuisine":{"$in":request.GET['cuisine'].split(",")}})
         if 'mtype' in request.GET.keys():
@@ -130,7 +137,11 @@ def get_deals(request,user, category, typ):
 
         else:
             newlist = data
-        newlist = sorted(newlist, key=lambda k: k[sort],reverse=reverse) 
+        if ope:
+            delta = [x for x in newlist if x['open'] is True]
+        else:
+            delta = newlist
+        newlist = sorted(delta, key=lambda k: k[sort],reverse=reverse) 
         res = {
             "total": len(newlist),
             "data": newlist[start:end],

@@ -52,6 +52,19 @@ def get_coupon(request):
 """
 success = { "success": 1 }
 failure = { "success": 0 }
+@csrf_exempt
+def getUserDeals(request,userID):
+    collection = db.order_data
+    t = collection.find({
+            "userID": userID,
+            "ustatus": "pending"
+        })
+    data = []
+    if t:
+        for x in t:
+            x = x
+
+
 
 @csrf_exempt
 def check_coupon(request):
@@ -74,8 +87,15 @@ def check_coupon(request):
             result = failure.copy()
             result.update({"error": "Invalid cID"})
             return HttpResponse(dumps(result), content_type="application/json")
+        # 3 Check if user is verified or not
+        users = db.user
+        user = users.find_one({"userID":data['userID']})
+        if user['verified'] in 'Y':
+            limit = 2
+        else:
+            limit = 1
 
-        # 3 Check if the user is over his/her limit for coupons
+        # 4 Check if the user is over his/her limit for coupons
         t2 = collection.find({
             "userID": data["userID"],
             "ustatus": "pending"

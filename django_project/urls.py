@@ -18,11 +18,11 @@ url(r'^text',redeemCoupon.test,name='redeemCoupon.test'),
     url(r'^perkkx/update/user',userApi.updateuser, name='userApi.updateuser'),
     url('^perkkx/check', userApi.user_exist, name="userApi.user_exist"),
     url(r'^perkkx/echo', 'preks.echo'),
-
+    url(r'^perkkx/verifyUser/(?P<code>\w+)', userApi.verifyUser, name='userApi.verifyUser'),
     url(r'^perkkx/deals/(?P<user>\w+)/(?P<category>\d+)/(?P<typ>\w+)', dealsApi.get_deals, name='dealsApi.get_deals'),
     url(r'^perkkx/deals', dealsApi.get_totals, name='dealsApi.get_totals'),
     url(r'^perkkx/merchant/coupon/(?P<mID>\d+)', merchantApi.get_coupons, name='merchantApi.get_coupons'),
-
+    url(r'^perkkx/getCompany', userApi.getFacility, name='userApi.getFacility'),
     url(r'^perkkx/redeem/check', redeemCoupon.check_coupon, name='redeemCoupon.check_coupon'),
     url(r'^perkkx/redeem', redeemCoupon.add_coupon, name='redeemCoupon.add_coupon'),
 

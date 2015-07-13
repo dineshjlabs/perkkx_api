@@ -17,7 +17,7 @@ db = dbclient.test
 @csrf_exempt
 def get_savings(request, userID):       # Dummy
     collection = db.order_data
-    deals = collection.find({"userID":userID})
+    deals = collection.find({"userID":userID,"mstatus":"used"})
     total = 0
     for x in deals:
         total = total + x['discount']

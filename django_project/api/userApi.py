@@ -95,7 +95,7 @@ def signup(request):
 
         #key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))    # TODO
         #key = '12345599'
-        key = userIdGen() + "99"
+        key = userIdGen()
         data.update({"userID":key})
         data.update({"verified":"N"})
         collection.insert(data)
@@ -129,13 +129,15 @@ def getdata(request):
 
         return HttpResponse(dumps(failure),content_type="application/json")
 def conf_mail(email,code):
-    message = Message(From="Verify",
-                  To=[email],
-                  Subject="Verify your Corporate ID")
-    message.Body = "Your Conformation Code: " + code 
-    sender = Mailer('smtp.gmail.com',port=587,use_tls=True)
-    sender.login("pricing@jlabs.co","coldplay@123")
-    sender.send(message)
+    import sendgrid
+    sg = sendgrid.SendGridClient('ashmeetjlabs', 'jlabs@123')
+    message = sendgrid.Mail()
+    message.add_to(email)
+    message.set_subject("Verify your Corporate ID")
+    message.set_html("Click <a href='http://api.jlabs.co/perkkx/verifyUser/" + code + "'>Here</a> to verify your account and get all deals." )
+    message.set_from('Verify <no-reply@perkkx.com>')
+    return sg.send(message)
+
 @csrf_exempt
 def updateuser(request):
     global db
@@ -168,7 +170,10 @@ def updateuser(request):
         try:
             #conf_mail(data['cemail'],key)
             if verified['verified'] in 'N':
-                conf_mail(data['cemail'],key)
+                verify = ''.join(random.choice(string.ascii_lowercase) for _ in range(4))
+                code = key + "_" + verify
+                status,msg = conf_mail(data['cemail'],code)
+                data['code'] = verify
         except:
             print "hi"
         collection.update({"userID":key},{"$set": data} ,False)
@@ -177,7 +182,7 @@ def updateuser(request):
         #raise
         failure['success'] = '0'
         failure['reason'] = "UPDATATION CAN'T BE PROCEEDED"
-        return HttpResponse(failure,content_type="application/json")
+        return HttpResponse(dumps(failure),content_type="application/json")
 @csrf_exempt
 def user_coupons(request,uid):
     global db
@@ -206,3 +211,50 @@ def user_coupons(request,uid):
     except Exception, e:
         failure = {"success": 0, "reason": str(e)}
         return HttpResponse(failure,content_type="application/json")
+@csrf_exempt
+def getFacility(request):
+	failure = {"success": 0}
+	if "domain" in request.GET.keys():
+		global db
+		domain = str(request.GET['domain'])
+		collection = db.corp
+		data = []
+		search = {"domain":domain}
+		temp = collection.find(search)
+		if temp.count() > 0:
+			for x in temp:
+				x.pop("domain")
+				x.pop("name")
+				x.pop("_id")
+				data.append(x)
+			return HttpResponse(dumps(data),content_type="application/json")
+		else:
+			failure.update({"reason":"domain not found"})
+			return HttpResponse(dumps(failure),content_type="application/json")
+	else:
+		failure.update({"reason":"Bad Request"})
+		return HttpResponse(dumps(failure),content_type="application/json")
+
+@csrf_exempt
+def verifyUser(request,code):
+    code = code.split("_")
+    if len(code) == 2:
+        global db
+        collection = db.user
+        data = collection.find_one({"userID":code[0]})
+        if data:
+            try:
+                if data['verified'] == "Y":
+                    return HttpResponse("Already Verified")
+                if data['code'] in code[1].strip():
+                    data['verified'] = "Y"
+                    collection.update({"userID":code[0]},{"$set": data} ,False)
+                    return HttpResponse("User has been verified. COntinue to app")
+                else:
+                    return HttpResponse("Invalid URL")
+            except:
+                return HttpResponse("Invalid Username")
+        else:
+            return HttpResponse("Invalid Username")
+    else:
+        return HttpResponse("Invalid Format")
