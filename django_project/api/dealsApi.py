@@ -65,6 +65,7 @@ def get_deals(request,user, category, typ):
             elif 'price' in request.GET['sort']:
                 sort = 'price'
             else:
+                return HttpResponse(dumps(request.GET), content_type="application/json")
                 sort = 'distance'
         else:
             return HttpResponse(dumps(request.GET), content_type="application/json")
