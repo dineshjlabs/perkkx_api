@@ -15,7 +15,8 @@ from math import pi, sin , cos , atan2,sqrt
 
 failure = dumps({ "success": 0 })
 dbclient = pymongo.MongoClient("mongodb://45.55.232.5:27017")
-db = dbclient.test
+db = dbclient.perkkx
+
 def distance(obj):
     R = 6371
     dLat = (obj['l2'] - obj['l1']) * pi / 180
