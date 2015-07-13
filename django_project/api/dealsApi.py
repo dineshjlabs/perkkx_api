@@ -104,8 +104,8 @@ def get_deals(request,user, category, typ):
                 """
                 merdata = {}
                 merdata.update(m)
-                deal.pop("rcodes")
-                deal.pop("usedrcodes")
+#                deal.pop("rcodes")
+#               deal.pop("usedrcodes")
                 merdata.pop("cat")
                 if datetime.datetime.strptime(merdata['close_time'],"%H:%M") > datetime.datetime.strptime(datetime.datetime.now().time().strftime("%H:%M"),"%H:%M"):
                     op = True
