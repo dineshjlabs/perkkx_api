@@ -43,8 +43,8 @@ def get_deals(request,user, category, typ):
         except:
             pages = 1
         if 'lat' in request.GET.keys() and 'lon' in request.GET.keys():
-            lat = request.GET['lat']
-            lon = request.GET['lon']
+            lat = re.sub("[^0-9]\.","",request.GET['lat'])
+            lon = re.sub("[^0-9]\.","",request.GET['lon'])
         else:
             lat = False
         if 'r' in request.GET.keys():
@@ -123,8 +123,8 @@ def get_deals(request,user, category, typ):
                         data_for_distance = {
                         "l1":float(lat),
                         "ln1":float(lon),
-                        "l2":float(merdata['address']['lat']),
-                        "ln2":float(merdata['address']['lng'])
+                        "l2":float(re.sub("[^0-9]\.","",merdata['address']['lat'])),
+                        "ln2":float(re.sub("[^0-9]\.","",merdata['address']['lng']))
                         }
                         merdata.update({"distance":distance(data_for_distance)})
                     else:
