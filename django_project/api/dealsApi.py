@@ -67,6 +67,7 @@ def get_deals(request,user, category, typ):
             else:
                 sort = 'distance'
         else:
+            return HttpResponse(dumps(request.GET), content_type="application/json")
             sort = 'distance'
         search = {"cat": int(category)}
         if 'subcat' in request.GET.keys():
