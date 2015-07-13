@@ -111,8 +111,8 @@ def get_deals(request,user, category, typ):
                     op = True
                 else:
                     op = False
-                merdata.pop("open_time")
-                merdata.pop("close_time")
+#                merdata.pop("open_time")
+#               merdata.pop("close_time")
                 merdata.update({"open":op})
                 merdata.update({"cat":int(category)})
                 if lat:
