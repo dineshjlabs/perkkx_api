@@ -84,7 +84,6 @@ def get_deals(request,user, category, typ):
             search.update({"vendor_id":{"$in":[int(x.replace("u","").strip("'")) for x in request.GET['vendor'].split(",")]}})
         if 'area' in request.GET.keys():
             search.update({"address.text":{"$in":[re.compile(x.replace("_"," "),re.IGNORECASE) for x in request.GET['area'].split(",")]}})
-            return HttpResponse(dumps(search), content_type="application/json")
         if 'rate' in request.GET.keys():
             rating = [float(int(x) - 0.1) for x in request.GET['rate'].split(",")]
             search.update({"rating":{"$gt":min(rating)}})
