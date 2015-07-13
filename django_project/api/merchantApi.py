@@ -9,7 +9,7 @@ import string
 import json
 failure = dumps({ "success": 0 })
 dbclient = pymongo.MongoClient("mongodb://45.55.232.5:27017")
-db = dbclient.perkkx
+db = dbclient.test
 
 @csrf_exempt
 def merchants(request, mID):

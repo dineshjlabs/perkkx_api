@@ -11,7 +11,7 @@ import json
 #from dispute import check_dispute
 
 dbclient = pymongo.MongoClient("mongodb://45.55.232.5:27017")
-db = dbclient.perkkx
+db = dbclient.test
 
 def updateRating (vendor_id, rating):
     collection = db.merchants
