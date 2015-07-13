@@ -163,7 +163,6 @@ def get_deals(request,user, category, typ):
         }
         return HttpResponse(dumps(res), content_type="application/json")
     except Exception, e:
-    	raise
         return HttpResponse(dumps({"exception": "error : "+str(e), "type": typ}), content_type="application/json")
 
 @csrf_exempt
