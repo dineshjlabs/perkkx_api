@@ -118,7 +118,7 @@ def get_deals(request,user, category, typ):
 #               merdata.pop("close_time")
                 merdata.update({"open":op})
                 merdata.update({"cat":int(category)})
-                if merdata['address']['lat'] not in "" or merdata['address']['lng'] not "":
+                if merdata['address']['lat'] not in "" or merdata['address']['lng'] not in "":
                     if lat:
                         data_for_distance = {
                         "l1":float(lat),
