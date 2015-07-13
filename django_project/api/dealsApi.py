@@ -122,8 +122,8 @@ def get_deals(request,user, category, typ):
                     data_for_distance = {
                     "l1":float(lat),
                     "ln1":float(lon),
-                    "l2":float(merdata['address']['lat']),
-                    "ln2":float(merdata['address']['lng'])
+                    "l2":float(merdata['address']['lat'].encode("utf-8")),
+                    "ln2":float(merdata['address']['lng'].encode("utf-8"))
                     }
                     merdata.update({"distance":distance(data_for_distance)})
                 else:
@@ -153,6 +153,7 @@ def get_deals(request,user, category, typ):
         }
         return HttpResponse(dumps(res), content_type="application/json")
     except Exception, e:
+    	raise
         return HttpResponse(dumps({"exception": "error : "+str(e), "type": typ}), content_type="application/json")
 
 @csrf_exempt
