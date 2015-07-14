@@ -1,33 +1,16 @@
-from bson.json_util import dumps
-from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.template import Template,Context
 import pymongo
 from datetime import datetime, date
 import calendar
-from .data_query import db, get_data
+from .data_query import db, get_data, response
 import re
 
 def _get_unix_timestamp(data):      # data is datetime
     return int(calendar.timegm(
             data.utctimetuple()
         ) * 1000)
-    
-""""
-@csrf_exempt
-def validate_code(request):
-    try:
-        code = request.GET['rcode']
-        # Assert the code length
-        userID = code[:-2]
-        if db.user.find({"userID": userID}).count() == 0:
-            return HttpResponse(dumps({"valid": False}), content_type='application/json')
-        else:
-            return HttpResponse(dumps({"valid": True, "rcode": code }))
-    except:
-        return HttpResponse(dumps({"valid": False,"error": "Invalid code"}), content_type='application/json')
 
-"""
 
 def get_dealOpts(vendor_id):
     deals = db.deals.find({ "vendor_id": vendor_id})
@@ -63,43 +46,15 @@ def validate_code(request):
                     res['selectedIndex'] = 0
 
                 res["used_on"] = _get_unix_timestamp(res["used_on"])
-                #deal = db.deals.find_one({"cID": res["cID"]})
-                #res["deal"] = deal["deal"]
-                #res["desc"] = deal["desc"]
-                return HttpResponse(dumps({"valid": True, "data": res}), content_type='application/json')
-            else: return HttpResponse(dumps(invalid_code), content_type='application/json')
+                return response({"valid": True, "data": res})
+            else: return response(invalid_code)
         else:
             user = db.user.find_one({"userID": code[:-2]})
             if not user:
-                return HttpResponse(dumps({"valid": False, "error": "Wrong user id "+code[:-2]}), content_type='application/json')
-            """
-            # Assuming that the last two characters are cID
-            cid = code[-2:]
-            creg = re.compile("^"+cid+"$", re.IGNORECASE)
-            deals = db.deals.find({"cID": creg})
-            #return HttpResponse(dumps({"valid": False, "debug": deals.count()}), content_type='application/json')
-            deal = {}
-            for d in deals:
-                if datetime.strptime(d["expiry"], "%d/%m/%Y") > datetime.now():
-                    deal = d
-                    break
-
-            if not deal:
-                return HttpResponse(dumps(invalid_code), content_type='application/json')
-            """
+                return response({"valid": False, "error": "Wrong user id "+code[:-2]})
             dealOpts = get_dealOpts(vendor_id)
-            """
-            deals = db.deals.find({ "vendor_id": vendor_id})
-            dealOpts = []
-            for d in deals:
-                if datetime.strptime(d["expiry"], "%d/%m/%Y") > datetime.now():
-                    dealOpts.append({
-                        "deal": d["deal"],
-                        "cID": d["cID"]
-                    })
-            """
             if not dealOpts:
-                return HttpResponse(dumps({"valid": False, "error": "No dealOpts"}), content_type='application/json')
+                return response({"valid": False, "error": "No dealOpts"})
 
             result = {
                 "used_on": int(calendar.timegm(datetime.now().utctimetuple()) * 1000),
@@ -108,21 +63,17 @@ def validate_code(request):
                 "dealOpts": dealOpts,
                 "selectedIndex": 0
             }
-            return HttpResponse(dumps({"valid": True, "data": result}), content_type='application/json')
+            return response({"valid": True, "data": result})
         
-        """
-        else:
-            return HttpResponse(dumps({"valid": False,"error": "Invalid code"}), content_type='application/json')
-        """
     except Exception, e:
-        return HttpResponse(dumps({"valid": False,"error": "Invalid code and error " + str(e)}), content_type='application/json')
+        return response({"valid": False,"error": "Invalid code and error " + str(e)})
         
 
 @csrf_exempt
 def get(request, typ, vendor_id):
     "GET requests for typ [pending, used, expired, disputed] and vendor_id"
     if typ not in ['pending', 'used', 'expired', 'disputed']:
-        return HttpResponse(dumps({"error": "Unknown type"}), content_type='application/json')
+        return response({"error": "Unknown type"})
 
     page, total_pages, init_data = get_data(request, int(vendor_id), typ)
 
@@ -156,7 +107,7 @@ def get(request, typ, vendor_id):
         "data": result_list
     }
 
-    return HttpResponse(dumps(result), content_type="application/json")
+    return response(result)
 
 @csrf_exempt
 def get_count(request, vendor_id):
@@ -167,7 +118,7 @@ def get_count(request, vendor_id):
             "used": collection.count({"vendor_id": int(vendor_id), "mstatus": "used"}),
             "disputed": collection.count({"vendor_id": int(vendor_id), "mstatus": "disputed"})
         }
-        return HttpResponse(dumps(result), content_type="application/json")
+        return response(result)
     except Exception, e:
-        return HttpResponse(dumps({"error": str(e)}), content_type="application/json")
+        return response({"error": str(e)})
 

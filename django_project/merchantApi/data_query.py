@@ -1,10 +1,15 @@
 ## Base Query get methods
+from bson.json_util import dumps
+from django.http import HttpResponse
 import pymongo
 import math
 
 dbclient = pymongo.MongoClient("mongodb://45.55.232.5:27017")
 db = dbclient.test
 limit = 10
+
+def response(obj):
+    return HttpResponse(dumps(obj), content_type='application/json')
 
 " Execute the main query, based on the operation "
 def _exec_query(vendor_id, operation):
@@ -32,3 +37,4 @@ def get_data(request, vendor_id, operation):
 
     res = lst[start:end]
     return page, int(math.ceil(res.count() / (limit*1.0))), res             # Works for even stupid splices like [-10:0]
+
