@@ -89,6 +89,7 @@ def get_deals(request,user, category, typ):
         if 'rate' in request.GET.keys():
             rating = [float(int(x) - 0.1) for x in request.GET['rate'].split(",")]
             search.update({"rating":{"$gt":min(rating)}})
+        return HttpResponse(dumps(search), content_type="application/json")
         if 'price' in request.GET.keys():
             low,high = request.GET['price'].split("-")
             low = int(low) - 1
