@@ -1,16 +1,13 @@
-from bson.json_util import dumps
-from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import pymongo
 from datetime import datetime, date
 import calendar
-from .data_query import db
+from .data_query import db, response
 import json
 
 def _time_transform(data):
     tm = datetime.fromtimestamp(int(data / 1000))
     return tm
-    #return tm.strftime("%d/%m/%Y %H:%M:%S")
 
 def _copy_bill(dest, source):
     dest['submitted_on'] = _time_transform(source['submitted_on'])
@@ -63,7 +60,7 @@ def post(request, vendor_id):
             }
             while not update_order_data(query, req_data):
                 pass
-            return HttpResponse(dumps({ "success": 1, "debug": "case1" }), content_type='application/json')
+            return response({ "success": 1, "debug": "case1" })
             
         else:
             newData = {
@@ -79,7 +76,27 @@ def post(request, vendor_id):
                 _copy_bill(newData, req_data)
             
             collection.insert(newData)
-            return HttpResponse(dumps({ "success": 1 , "debug": "case2"}), content_type='application/json')
+            return response({ "success": 1 , "debug": "case2"})
 
     except Exception, e:
-        return HttpResponse(dumps({ "success": 0, "error": str(e) }), 'application/json')
+        return response({"success": 0, "error": str(e)})
+
+
+@csrf_exempt
+def login(request):
+    success = {"result": True}
+    failure = {"result": False}
+    try:
+        data = json.loads(request.body)
+        collection = db.credentials
+        if data['mode'] == "login":
+            cred = collection.find_one({"vendor_id": data['vendor_id'], "password": data['password']})
+            return response(success) if cred else response(failure)
+        elif data['mode'] == "change_pass":
+            result = collection.update_one({"vendor_id": data['vendor_id'], "password": data["password_old"]},
+                                           {"$set": {"password": data["password"]}})
+            return response({"result": result['updatedExisting']})
+        else:
+            return response({"result": False, "error": "Unknown mode"})
+    except Exception, e:
+        return response({"result": False, "error": "Excepton: "+str(e)})
