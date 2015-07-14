@@ -117,7 +117,7 @@ def getdata(request):
         collection = db.user
         data = collection.find({"userID":id})
 	if data.count() is 1:
-            return HttpResponse(data,content_type="application/json")
+            return HttpResponse(dumps(data),content_type="application/json")
 	else:
 	    failure['success'] = '0'
 	    failure['reason'] = "NO USER FOUND"
