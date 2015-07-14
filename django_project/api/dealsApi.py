@@ -73,7 +73,7 @@ def get_deals(request,user, category, typ):
         if 'subcat' in request.GET.keys():
             search.update({"subcat":{"$in":[int(x.replace("u","").strip("'")) for x in request.GET['subcat'].split(",")]}})
         if 'ser' in request.GET.keys():
-            search.update({"special_event.title":{"$in":request.GET['ser'].split(",")}})
+            search.update({"spec_event.title":{"$in":request.GET['ser'].split(",")}})
         if 'cuisine' in request.GET.keys():
             search.update({"cuisine":{"$in":request.GET['cuisine'].split(",")}})
         if 'mtype' in request.GET.keys():
