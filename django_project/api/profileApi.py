@@ -11,7 +11,7 @@ from mailer import Mailer
 from mailer import Message
 
 dbclient = pymongo.MongoClient("mongodb://45.55.232.5:27017")
-db = dbclient.test
+db = dbclient.perkkx
 
 
 @csrf_exempt

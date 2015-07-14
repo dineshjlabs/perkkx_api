@@ -6,7 +6,7 @@ import json
 import sys
 
 dbclient = pymongo.MongoClient("mongodb://45.55.232.5:27017")
-db = dbclient.test
+db = dbclient.perkkx
 
 """
 def check_dispute(object):
