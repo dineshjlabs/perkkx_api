@@ -169,11 +169,12 @@ def updateuser(request):
         verified = collection.find_one({"userID":key})
         try:
             #conf_mail(data['cemail'],key)
-            if verified['verified'] in 'N':
+            if 'cemail' in data.keys():
                 verify = ''.join(random.choice(string.ascii_lowercase) for _ in range(4))
                 code = key + "_" + verify
                 status,msg = conf_mail(data['cemail'],code)
                 data['code'] = verify
+                data['verified'] = "N"
         except:
             print "hi"
         collection.update({"userID":key},{"$set": data} ,False)
@@ -209,7 +210,6 @@ def user_coupons(request,uid):
                 expired.append(rep)
         return HttpResponse(dumps({"pending":pending,"expired":expired,"used":used}),content_type="application/json")
     except Exception, e:
-        raise
         failure = {"success": 0, "reason": str(e)}
         return HttpResponse(dumps(failure),content_type="application/json")
 @csrf_exempt
