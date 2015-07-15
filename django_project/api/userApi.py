@@ -209,6 +209,7 @@ def user_coupons(request,uid):
                 expired.append(rep)
         return HttpResponse(dumps({"pending":pending,"expired":expired,"used":used}),content_type="application/json")
     except Exception, e:
+        raise
         failure = {"success": 0, "reason": str(e)}
         return HttpResponse(dumps(failure),content_type="application/json")
 @csrf_exempt
