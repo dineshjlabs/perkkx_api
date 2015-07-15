@@ -210,7 +210,7 @@ def user_coupons(request,uid):
         return HttpResponse(dumps({"pending":pending,"expired":expired,"used":used}),content_type="application/json")
     except Exception, e:
         failure = {"success": 0, "reason": str(e)}
-        return HttpResponse(failure,content_type="application/json")
+        return HttpResponse(dumps(failure),content_type="application/json")
 @csrf_exempt
 def getFacility(request):
 	failure = {"success": 0}
