@@ -41,7 +41,7 @@ def update_order_data (query, req_data):
     else:                                                                       # DISPUTE
         record['mstatus'] = 'disputed'                                          # NOT possible
 
-    result = collection.update_one(query, record, False)
+    result = collection.update(query, record, False)        # IMPORTANT, cannot be updateOne
     return result['updatedExisting']
 
 " Post data from the merchnat app "
