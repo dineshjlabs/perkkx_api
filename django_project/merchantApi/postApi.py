@@ -84,14 +84,16 @@ def post(request, vendor_id):
 
 @csrf_exempt
 def login(request):
-    success = {"result": True}
-    failure = {"result": False}
     try:
         data = json.loads(request.body)
         collection = db.credentials
         if data['mode'] == "login":
             cred = collection.find_one({"vendor_id": data['vendor_id'], "password": data['password']})
-            return response(success) if cred else response(failure)
+            if cred:
+                vendor = db.merchants.find_one({"vendor_id": data['vendor_id']}, {"vendor_name": True, "_id": False})
+                return response({"result": True, "vendor_name": vendor['vendor_name']})
+            else:
+                return response({"result": False})
         elif data['mode'] == "change_pass":
             result = collection.update_one({"vendor_id": data['vendor_id'], "password": data["password_old"]},
                                            {"$set": {"password": data["password"]}})
