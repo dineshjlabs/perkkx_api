@@ -142,6 +142,9 @@ def get_ratings (request):
     try:
         userID = request.GET['userID']
         records = db.ratings.find({"useID": userID}, {"_id": False, "comment": False})
+        for record in records:
+            record['date'] = record['date'].strftime("%d/%m/%Y")
+
         return response({"success": 1, "data": records})
     except Exception, e:
         return response({"success": 0, "error": "Exception "+str(e)})
