@@ -112,7 +112,7 @@ def signup(request):
             return response(failure)
 
         collection = db.credentials
-        if collection.count({"username": data['username']}) == 0:
+        if collection.count({"username": data['username']}) > 0:
             return response(failure)
 
         collection.insert_one({
