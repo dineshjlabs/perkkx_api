@@ -24,7 +24,7 @@ def update_order_data (query, req_data):
     # Section 1: Merchant Initiated
     if record['ustatus'] == "pending":
         record['mstatus'] = req_data['status']
-        record['ustatus'] = req_data['status']  # Will be used only
+        #record['ustatus'] = req_data['status']  # Will be used only, let consumer do that
         if req_data['status'] == 'used':
             _copy_bill(record, req_data)
             # Rest of the merchant initiated process to be done when user closes the coupon
