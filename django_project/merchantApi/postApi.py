@@ -88,14 +88,14 @@ def login(request):
         data = json.loads(request.body)
         collection = db.credentials
         if data['mode'] == "login":
-            cred = collection.find_one({"vendor_id": data['vendor_id'], "password": data['password']})
+            cred = collection.find_one({"username": data['username'], "password": data['password']})
             if cred:
-                vendor = db.merchants.find_one({"vendor_id": data['vendor_id']}, {"vendor_name": True, "_id": False})
-                return response({"result": True, "vendor_name": vendor['vendor_name']})
+                vendor = db.merchants.find_one({"vendor_id": cred['vendor_id']}, {"vendor_name": True, "_id": False})
+                return response({"result": True, "vendor_name": vendor['vendor_name'], "vendor_id": cred['vendor_id']})
             else:
                 return response({"result": False})
         elif data['mode'] == "change_pass":
-            result = collection.update_one({"vendor_id": data['vendor_id'], "password": data["password_old"]},
+            result = collection.update_one({"username": data['username'], "password": data["password_old"]},
                                            {"$set": {"password": data["password"]}})
             return response({"result": result['updatedExisting']})
         else:
