@@ -102,3 +102,24 @@ def login(request):
             return response({"result": False, "error": "Unknown mode"})
     except Exception, e:
         return response({"result": False, "error": "Excepton: "+str(e)})
+
+@csrf_exempt
+def signup(request):
+    failure = {"result": False}
+    try:
+        data = json.loads(request.body)
+        if db.merchants.count({"vendor_id": data['vendor_id']}) == 0:
+            return response(failure)
+
+        collection = db.credentials
+        if collection.count({"username": dat['username']}) == 0:
+            return response(failure)
+
+        collection.insert_one({
+            "vendor_id": data['vendor_id'],
+            "username": data['username'],
+            "password": data['password']
+        })
+        return response({"result": True})
+    except Exception, e:
+        return response({"result": False, "error": "Excepton: "+str(e)})
