@@ -130,3 +130,7 @@ def check_pending (request):
         return response({"success": 1, "data": records})
     except Exception, e:
         return response({"success": 0, "error": "Exception "+str(e)})
+
+@csrf_exempt
+def get_ratings (request):
+    pass
