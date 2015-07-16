@@ -122,4 +122,11 @@ def rate_merchant (request):
 
 @csrf_exempt
 def check_pending (request):
-    pass
+    try:
+        userID = request.GET['userID']
+        records = db.order_data.find({"userID": userID, "ustatus": "pending"},
+                                     {"_id": False, "rcode": True, "cID": True, "mstatus": True, "paid": True, "discount": True})
+
+        return response({"success": 1, "data": records})
+    except Exception, e:
+        return response({"success": 0, "error": "Exception "+str(e)})
