@@ -24,7 +24,7 @@ def update_order_data (query, req_data):
     # Section 1: Merchant Initiated
     if record['ustatus'] == "pending":
         record['mstatus'] = req_data['status']
-        record['ustatus'] = req_data['status']  # Will be used only
+        #record['ustatus'] = req_data['status']  # Will be used only, let consumer do that
         if req_data['status'] == 'used':
             _copy_bill(record, req_data)
             # Rest of the merchant initiated process to be done when user closes the coupon
@@ -88,14 +88,14 @@ def login(request):
         data = json.loads(request.body)
         collection = db.credentials
         if data['mode'] == "login":
-            cred = collection.find_one({"vendor_id": data['vendor_id'], "password": data['password']})
+            cred = collection.find_one({"username": data['username'], "password": data['password']})
             if cred:
-                vendor = db.merchants.find_one({"vendor_id": data['vendor_id']}, {"vendor_name": True, "_id": False})
-                return response({"result": True, "vendor_name": vendor['vendor_name']})
+                vendor = db.merchants.find_one({"vendor_id": cred['vendor_id']}, {"vendor_name": True, "_id": False})
+                return response({"result": True, "vendor_name": vendor['vendor_name'], "vendor_id": cred['vendor_id']})
             else:
                 return response({"result": False})
         elif data['mode'] == "change_pass":
-            result = collection.update_one({"vendor_id": data['vendor_id'], "password": data["password_old"]},
+            result = collection.update({"username": data['username'], "password": data["password_old"]},
                                            {"$set": {"password": data["password"]}})
             return response({"result": result['updatedExisting']})
         else:
